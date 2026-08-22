@@ -61,9 +61,19 @@
                 <label for="uai_dm_api_key"><small>API Key</small></label>
                 <input id="uai_dm_api_key" class="text_pole" type="password" autocomplete="off" />
 
-                <label for="uai_dm_api_model"><small>Model</small></label>
+                <label for="uai_dm_api_model_select"><small>已拉取模型</small></label>
+                <select id="uai_dm_api_model_select" class="text_pole">
+                    <option value="">— 先点「获取模型」—</option>
+                </select>
+
+                <label for="uai_dm_api_model"><small>当前模型（可手动填写）</small></label>
                 <input id="uai_dm_api_model" class="text_pole" type="text" placeholder="gpt-4o" />
             </div>
+            <div class="flex-container" style="gap: 8px; flex-wrap: wrap; margin: 8px 0;">
+                <button id="uai_dm_api_test" type="button" class="menu_button" data-api-action="test">测试连接</button>
+                <button id="uai_dm_api_fetch" type="button" class="menu_button" data-api-action="fetch">获取模型</button>
+            </div>
+            <small id="uai_dm_api_status">未测试。也可在右下角浮窗「导演 API」页配置。</small>
         </div>
     </div>
 </div>

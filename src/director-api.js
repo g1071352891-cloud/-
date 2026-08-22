@@ -23,11 +23,7 @@ export async function callDirector(spec) {
     ];
 
     if (settings.apiMode === API_MODE.CUSTOM && (settings.apiBaseUrl || settings.apiModel)) {
-        try {
-            return await callCustom(settings, messages, spec);
-        } catch (err) {
-            console.warn(LOG_PREFIX, 'Custom director API failed, falling back to main model', err);
-        }
+        return callCustom(settings, messages, spec);
     }
 
     return callMain(messages, spec);
@@ -68,11 +64,12 @@ async function callCustom(settings, messages, spec) {
 
     if (ctx.ChatCompletionService?.sendRequest) {
         try {
+            // openai + reverse_proxy 会把本扩展自己的 Key 交给酒馆后端转发，避开浏览器 CORS。
             const rawRequest = {
                 stream: false,
                 messages,
                 model,
-                chat_completion_source: 'custom',
+                chat_completion_source: 'openai',
                 max_tokens: spec.maxTokens || DEFAULT_MAX_TOKENS,
                 temperature: spec.temperature ?? 0.35,
                 custom_url: baseUrl,
@@ -139,7 +136,7 @@ function unwrapGenerateResult(result) {
     return String(result);
 }
 
-function normalizeBaseUrl(url) {
+export function normalizeBaseUrl(url) {
     const trimmed = String(url || '').trim().replace(/\/+$/, '');
     if (!trimmed) return 'https://api.openai.com/v1';
     if (/\/v1$/i.test(trimmed) || /\/v1beta$/i.test(trimmed)) return trimmed;
@@ -149,7 +146,138 @@ function normalizeBaseUrl(url) {
 
 function joinUrl(base, path) {
     if (/\/chat\/completions$/i.test(base)) return base;
+    if (/\/models$/i.test(base) && path === 'models') return base;
     return `${base.replace(/\/+$/, '')}/${path}`;
+}
+
+function extractModelIds(payload) {
+    if (!payload) return [];
+    const raw = Array.isArray(payload)
+        ? payload
+        : (payload.data || payload.models || payload.model_list || []);
+    if (!Array.isArray(raw)) return [];
+    const ids = raw.map((item) => {
+        if (typeof item === 'string') return item.trim();
+        return String(item?.id || item?.name || item?.model || '').trim();
+    }).filter(Boolean);
+    return [...new Set(ids)].sort((a, b) => a.localeCompare(b, 'zh'));
+}
+
+async function fetchModelsDirect(baseUrl, apiKey) {
+    const headers = {};
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    const response = await fetch(joinUrl(baseUrl, 'models'), { method: 'GET', headers });
+    if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`HTTP ${response.status} ${text.slice(0, 160)}`);
+    }
+    return extractModelIds(await response.json());
+}
+
+async function fetchModelsViaSt(baseUrl, apiKey) {
+    const ctx = SillyTavern.getContext();
+    const headers = typeof ctx.getRequestHeaders === 'function'
+        ? ctx.getRequestHeaders()
+        : { 'Content-Type': 'application/json' };
+    const response = await fetch('/api/backends/chat-completions/status', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+            chat_completion_source: 'openai',
+            reverse_proxy: baseUrl,
+            proxy_password: apiKey || '',
+        }),
+    });
+    if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(`酒馆代理 ${response.status} ${text.slice(0, 160)}`);
+    }
+    return extractModelIds(await response.json());
+}
+
+/**
+ * @param {ReturnType<typeof getSettings>} [settings]
+ * @returns {Promise<{ models: string[], via: string, ms: number }>}
+ */
+export async function listDirectorModels(settings = getSettings()) {
+    const baseUrl = normalizeBaseUrl(settings.apiBaseUrl);
+    if (!String(settings.apiBaseUrl || '').trim()) {
+        throw new Error('请先填写 Base URL');
+    }
+    const started = Date.now();
+    const errors = [];
+    try {
+        const models = await fetchModelsDirect(baseUrl, settings.apiKey);
+        return { models, via: 'direct', ms: Date.now() - started };
+    } catch (err) {
+        errors.push(`直连：${err.message || err}`);
+    }
+    try {
+        const models = await fetchModelsViaSt(baseUrl, settings.apiKey);
+        return { models, via: 'proxy', ms: Date.now() - started };
+    } catch (err) {
+        errors.push(`代理：${err.message || err}`);
+        throw new Error(errors.join('；'));
+    }
+}
+
+async function pingChat(settings) {
+    const started = Date.now();
+    const spec = {
+        system: 'You are a connection probe. Reply with the single word OK.',
+        user: 'ping',
+        maxTokens: 8,
+        temperature: 0,
+    };
+    if (settings.apiMode === API_MODE.CUSTOM) {
+        await callCustom(settings, [
+            { role: 'system', content: spec.system },
+            { role: 'user', content: spec.user },
+        ], spec);
+    } else {
+        await callMain([
+            { role: 'system', content: spec.system },
+            { role: 'user', content: spec.user },
+        ], spec);
+    }
+    return Date.now() - started;
+}
+
+/**
+ * Lightweight connectivity check. Prefers GET /models, then a tiny chat completion.
+ * @param {ReturnType<typeof getSettings>} [settings]
+ */
+export async function testDirectorConnection(settings = getSettings()) {
+    if (settings.apiMode !== API_MODE.CUSTOM) {
+        const ms = await pingChat(settings);
+        const model = SillyTavern.getContext().getChatCompletionModel?.() || '酒馆主模型';
+        return { ok: true, ms, message: `酒馆主模型可用（${model}），探测 ${ms}ms` };
+    }
+    if (!String(settings.apiBaseUrl || '').trim()) {
+        return { ok: false, message: '请先填写 Base URL' };
+    }
+    try {
+        const listed = await listDirectorModels(settings);
+        const via = listed.via === 'proxy' ? '经酒馆代理' : '直连';
+        return {
+            ok: true,
+            ms: listed.ms,
+            models: listed.models,
+            message: `连接成功（${via}），可用模型 ${listed.models.length} 个，${listed.ms}ms`,
+        };
+    } catch (listErr) {
+        try {
+            const ms = await pingChat(settings);
+            return {
+                ok: true,
+                ms,
+                models: [],
+                message: `对话接口可用（${ms}ms）。/models 拉取失败：${listErr.message || listErr}`,
+            };
+        } catch (chatErr) {
+            return { ok: false, message: String(chatErr.message || chatErr) };
+        }
+    }
 }
 
 /**

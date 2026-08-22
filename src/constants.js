@@ -49,6 +49,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
     apiBaseUrl: '',
     apiKey: '',
     apiModel: '',
+    apiModelList: [],
     plotComplexity: PLOT_COMPLEXITY.WEB,
     rerouteSensitivity: 55,
     evaluateEveryN: 3,

@@ -3,8 +3,8 @@
  * Multi-tier Main Plot Graph + Dynamic Re-Routing Engine for SillyTavern.
  */
 
-import { LOG_PREFIX, MODULE_NAME, PLOT_COMPLEXITY } from './src/constants.js';
-import { getSettings, saveSettings, updateSettings } from './src/settings.js';
+import { LOG_PREFIX, MODULE_NAME } from './src/constants.js';
+import { getSettings } from './src/settings.js';
 import { bindPromptHooks, clearDirectorInjection, setDirectorInjection } from './src/injector.js';
 import { parseLoreDeep } from './src/lore-parser.js';
 import { runDirectorCycle } from './src/engine.js';
@@ -12,6 +12,7 @@ import { syncDynamicLore } from './src/lore-sync.js';
 import { runConsistencyReview } from './src/reviewer.js';
 import { getChatBundle, persistChatBundle, getCharacterName, getChatKey } from './src/chat-store.js';
 import { ensureUi, renderGraph, setStatusLine, setUiActionHandler } from './src/ui.js';
+import { bindSettingsForms, fillSettingsForms } from './src/settings-ui.js';
 
 /** In-memory plot graph for the active chat. */
 let mainPlotGraph = null;
@@ -168,69 +169,17 @@ async function mountSettings() {
     const html = await fetch(new URL('./settings.html', import.meta.url)).then((r) => r.text());
     host.insertAdjacentHTML('beforeend', html);
 
-    const settings = getSettings();
     const $ = globalThis.jQuery || globalThis.$;
     if (!$) return;
-
     const $root = $('#uai_dm_settings');
-    $root.find('#uai_dm_enabled').prop('checked', settings.enabled);
-    $root.find('#uai_dm_inject').prop('checked', settings.injectEnabled);
-    $root.find('#uai_dm_sync_lore').prop('checked', settings.syncLorebook);
-    $root.find('#uai_dm_complexity').val(settings.plotComplexity || PLOT_COMPLEXITY.WEB);
-    $root.find('#uai_dm_sensitivity').val(settings.rerouteSensitivity);
-    $root.find('#uai_dm_sensitivity_val').text(settings.rerouteSensitivity);
-    $root.find('#uai_dm_every_n').val(settings.evaluateEveryN);
-    $root.find('#uai_dm_api_mode').val(settings.apiMode);
-    $root.find('#uai_dm_api_url').val(settings.apiBaseUrl);
-    $root.find('#uai_dm_api_key').val(settings.apiKey);
-    $root.find('#uai_dm_api_model').val(settings.apiModel);
-    toggleCustomApiFields();
-
     $root.find('#uai_dm_enabled').on('input', function () {
-        updateSettings({ enabled: Boolean(this.checked) });
         if (!this.checked) clearDirectorInjection();
         else if (mainPlotGraph) setDirectorInjection(mainPlotGraph.injectionText || '');
         renderGraph(mainPlotGraph);
     });
     $root.find('#uai_dm_inject').on('input', function () {
-        updateSettings({ injectEnabled: Boolean(this.checked) });
         if (mainPlotGraph) setDirectorInjection(mainPlotGraph.injectionText || '');
     });
-    $root.find('#uai_dm_sync_lore').on('input', function () {
-        updateSettings({ syncLorebook: Boolean(this.checked) });
-    });
-    $root.find('#uai_dm_complexity').on('change', function () {
-        updateSettings({ plotComplexity: this.value });
-    });
-    $root.find('#uai_dm_sensitivity').on('input', function () {
-        const value = Number(this.value);
-        $root.find('#uai_dm_sensitivity_val').text(value);
-        updateSettings({ rerouteSensitivity: value });
-    });
-    $root.find('#uai_dm_every_n').on('input', function () {
-        updateSettings({ evaluateEveryN: Math.max(1, Math.min(20, Number(this.value) || 3)) });
-    });
-    $root.find('#uai_dm_api_mode').on('change', function () {
-        updateSettings({ apiMode: this.value });
-        toggleCustomApiFields();
-    });
-    $root.find('#uai_dm_api_url').on('input', function () {
-        updateSettings({ apiBaseUrl: this.value.trim() });
-    });
-    $root.find('#uai_dm_api_key').on('input', function () {
-        updateSettings({ apiKey: this.value });
-    });
-    $root.find('#uai_dm_api_model').on('input', function () {
-        updateSettings({ apiModel: this.value.trim() });
-    });
-
-    saveSettings();
-}
-
-function toggleCustomApiFields() {
-    const custom = getSettings().apiMode === 'custom';
-    const block = document.getElementById('uai_dm_custom_api');
-    if (block) block.hidden = !custom;
 }
 
 function registerSlashCommands() {
@@ -293,6 +242,8 @@ async function init() {
     ensureUi();
     bindPanelActions();
     await mountSettings();
+    fillSettingsForms();
+    bindSettingsForms();
     bindAppEvents();
     registerSlashCommands();
     loadGraphFromChat();

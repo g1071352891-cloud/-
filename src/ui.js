@@ -34,6 +34,12 @@ export function ensureUi() {
                 </div>
                 <button type="button" class="uai-dm-icon-btn" data-action="close" title="关闭" aria-label="关闭面板">✕</button>
             </header>
+            <nav class="uai-dm-tabs" aria-label="面板分区">
+                <button type="button" class="uai-dm-tab is-active" data-tab="plot">主线图谱</button>
+                <button type="button" class="uai-dm-tab" data-tab="api">导演 API</button>
+            </nav>
+            <div class="uai-dm-tab-panels">
+            <div id="uai-dm-view-plot" class="uai-dm-view is-active" data-view="plot">
             <div class="uai-dm-toolbar">
                 <button type="button" class="uai-dm-btn" data-action="evaluate">立即推演</button>
                 <button type="button" class="uai-dm-btn" data-action="rebuild">重建图谱</button>
@@ -57,6 +63,43 @@ export function ensureUi() {
                 <h3>导演日志</h3>
                 <ol id="uai-dm-log" class="uai-dm-log"></ol>
             </section>
+            </div>
+            <form id="uai-dm-api" class="uai-dm-view" data-view="api" autocomplete="off">
+                <p class="uai-dm-api-lead">导演推演使用的模型，可与角色回复的酒馆主模型分开。Base URL 填到 <code>/v1</code> 为止，不要带 <code>/chat/completions</code>。</p>
+                <label class="uai-dm-field">
+                    <span>导演模型</span>
+                    <select id="uai-dm-api-mode">
+                        <option value="main">复用酒馆主模型</option>
+                        <option value="custom">独立 Base URL / Key / Model</option>
+                    </select>
+                </label>
+                <div id="uai-dm-api-custom">
+                    <label class="uai-dm-field">
+                        <span>Base URL</span>
+                        <input id="uai-dm-api-url" type="text" spellcheck="false" placeholder="https://api.openai.com/v1" />
+                    </label>
+                    <label class="uai-dm-field">
+                        <span>API Key</span>
+                        <input id="uai-dm-api-key" type="password" autocomplete="off" />
+                    </label>
+                    <label class="uai-dm-field">
+                        <span>已拉取模型</span>
+                        <select id="uai-dm-api-model-select">
+                            <option value="">— 先点「获取模型」—</option>
+                        </select>
+                    </label>
+                    <label class="uai-dm-field">
+                        <span>当前模型（可手动填写）</span>
+                        <input id="uai-dm-api-model" type="text" spellcheck="false" placeholder="gpt-4o" />
+                    </label>
+                </div>
+                <div class="uai-dm-api-actions">
+                    <button type="button" class="uai-dm-btn" data-api-action="test">测试连接</button>
+                    <button type="button" class="uai-dm-btn" data-api-action="fetch">获取模型</button>
+                </div>
+                <p id="uai-dm-api-status" class="uai-dm-api-status">未测试</p>
+            </form>
+            </div>
         </aside>
     `;
     document.body.appendChild(root);
@@ -67,6 +110,10 @@ export function ensureUi() {
     fab.addEventListener('click', () => {
         const willOpen = panel.hasAttribute('hidden');
         togglePanel(willOpen);
+    });
+
+    root.querySelectorAll('[data-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => switchTab(tab.getAttribute('data-tab')));
     });
 
     root.addEventListener('click', (ev) => {
@@ -81,6 +128,20 @@ export function ensureUi() {
     });
 
     panel.addEventListener('keydown', (ev) => ev.stopPropagation());
+    panel.querySelector('#uai-dm-api')?.addEventListener('submit', (ev) => ev.preventDefault());
+}
+
+export function switchTab(name) {
+    const panel = document.getElementById('uai-dm-panel');
+    if (!panel) return;
+    panel.querySelectorAll('[data-tab]').forEach((tab) => {
+        tab.classList.toggle('is-active', tab.getAttribute('data-tab') === name);
+    });
+    panel.querySelectorAll('[data-view]').forEach((view) => {
+        view.classList.toggle('is-active', view.getAttribute('data-view') === name);
+    });
+    const title = panel.querySelector('.uai-dm-panel-head h2');
+    if (title) title.textContent = name === 'api' ? '导演 API' : '主线图谱';
 }
 
 export function togglePanel(open) {
