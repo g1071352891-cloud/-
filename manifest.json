@@ -1,0 +1,16 @@
+{
+    "display_name": "Universal AI DM",
+    "loading_order": 50,
+    "requires": [],
+    "optional": [],
+    "dependencies": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Universal-AI-DM",
+    "version": "1.0.0",
+    "homePage": "",
+    "auto_update": true,
+    "minimum_client_version": "1.12.0",
+    "description": "Multi-tier main plot graph and dynamic re-routing engine for complex narrative roleplay.",
+    "generate_interceptor": "UniversalAiDmInterceptor"
+}

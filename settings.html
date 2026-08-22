@@ -1,0 +1,69 @@
+<div id="uai_dm_settings" class="uai-dm-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Universal AI DM</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <p class="uai-dm-settings-lead">
+                从角色卡与世界书抽取终极主线，并在玩家跑题时重写解法节点，而不是把人拽回旧路。
+            </p>
+
+            <label class="checkbox_label" for="uai_dm_enabled">
+                <input id="uai_dm_enabled" type="checkbox" />
+                <span>启用动态 DM</span>
+            </label>
+
+            <label class="checkbox_label" for="uai_dm_inject">
+                <input id="uai_dm_inject" type="checkbox" />
+                <span>注入导演重路由指令（Depth 0 / System）</span>
+            </label>
+
+            <label class="checkbox_label" for="uai_dm_sync_lore">
+                <input id="uai_dm_sync_lore" type="checkbox" />
+                <span>将新节点同步到 Chat-bound 世界书（[DM_Dynamic_Node]）</span>
+            </label>
+
+            <label for="uai_dm_complexity">
+                <small>主线复杂度</small>
+            </label>
+            <select id="uai_dm_complexity" class="text_pole">
+                <option value="linear">单线线性</option>
+                <option value="dual">双线交织</option>
+                <option value="web">网状多阵营阴谋</option>
+            </select>
+
+            <label for="uai_dm_sensitivity">
+                <small>重路由敏感度 <span id="uai_dm_sensitivity_val">55</span></small>
+            </label>
+            <input id="uai_dm_sensitivity" type="range" min="0" max="100" step="1" />
+
+            <label for="uai_dm_every_n">
+                <small>每 N 轮交互静默推演</small>
+            </label>
+            <input id="uai_dm_every_n" class="text_pole" type="number" min="1" max="20" step="1" />
+
+            <hr />
+            <small>API 独立配置</small>
+
+            <label for="uai_dm_api_mode">
+                <small>导演模型</small>
+            </label>
+            <select id="uai_dm_api_mode" class="text_pole">
+                <option value="main">复用酒馆主模型</option>
+                <option value="custom">独立 Base URL / Key / Model</option>
+            </select>
+
+            <div id="uai_dm_custom_api">
+                <label for="uai_dm_api_url"><small>Base URL</small></label>
+                <input id="uai_dm_api_url" class="text_pole" type="text" placeholder="https://api.openai.com/v1" />
+
+                <label for="uai_dm_api_key"><small>API Key</small></label>
+                <input id="uai_dm_api_key" class="text_pole" type="password" autocomplete="off" />
+
+                <label for="uai_dm_api_model"><small>Model</small></label>
+                <input id="uai_dm_api_model" class="text_pole" type="text" placeholder="gpt-4o" />
+            </div>
+        </div>
+    </div>
+</div>

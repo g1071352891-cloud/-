@@ -1,0 +1,7 @@
+{
+    "name": "universal-ai-dm",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "description": "SillyTavern extension: multi-tier main plot graph and dynamic re-routing engine."
+}

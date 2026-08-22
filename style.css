@@ -1,0 +1,404 @@
+/* Universal AI DM — conspiracy-board overlay. FAB position is sacred. */
+
+#uai-dm-root {
+    pointer-events: none;
+}
+
+#uai-dm-fab.uai-dm-fab {
+    pointer-events: auto;
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 10001;
+    width: 52px;
+    height: 52px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(201, 168, 108, 0.55);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 30% 20%, rgba(255, 232, 186, 0.18), transparent 42%),
+        #14120e;
+    color: #e4c37a;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.55),
+        0 10px 28px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transform: none !important;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+#uai-dm-fab.uai-dm-fab:hover,
+#uai-dm-fab.uai-dm-fab.is-open {
+    background: #1b1812;
+    border-color: #e4c37a;
+    color: #f3e1b0;
+}
+
+#uai-dm-fab .uai-dm-fab-glyph {
+    display: grid;
+    place-items: center;
+    line-height: 0;
+}
+
+.uai-dm-panel {
+    pointer-events: auto;
+    position: fixed;
+    right: 25px;
+    bottom: 90px;
+    z-index: 10000;
+    width: min(440px, calc(100vw - 36px));
+    max-height: calc(100vh - 130px);
+    overflow: auto;
+    padding: 16px 16px 20px;
+    color: #e7dfd0;
+    background:
+        linear-gradient(180deg, rgba(28, 24, 18, 0.97), rgba(12, 11, 10, 0.98));
+    border: 1px solid rgba(201, 168, 108, 0.28);
+    border-radius: 6px;
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 236, 190, 0.06);
+    font-family: "Iowan Old Style", "Palatino Linotype", "Songti SC", "Noto Serif SC", serif;
+}
+
+.uai-dm-panel[hidden] {
+    display: none !important;
+}
+
+.uai-dm-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.uai-dm-kicker {
+    margin: 0;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 10px;
+    color: #c9a86c;
+}
+
+.uai-dm-panel-head h2 {
+    margin: 2px 0 0;
+    font-size: 20px;
+    font-weight: 650;
+    color: #f4ead6;
+}
+
+.uai-dm-icon-btn {
+    border: 0;
+    background: transparent;
+    color: #cbbd9f;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px;
+}
+
+.uai-dm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.uai-dm-btn {
+    appearance: none;
+    border: 1px solid rgba(201, 168, 108, 0.35);
+    background: rgba(201, 168, 108, 0.08);
+    color: #ead9b0;
+    border-radius: 3px;
+    padding: 5px 9px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.uai-dm-btn:hover {
+    border-color: #c9a86c;
+}
+
+.uai-dm-btn-warn {
+    border-color: rgba(196, 92, 92, 0.55);
+    color: #e3b6b0;
+    background: rgba(196, 92, 92, 0.08);
+}
+
+.uai-dm-statusline {
+    font-size: 12px;
+    color: #b7aa90;
+    margin-bottom: 12px;
+    min-height: 1.2em;
+}
+
+.uai-dm-statusline[data-kind="busy"] { color: #d7c07a; }
+.uai-dm-statusline[data-kind="off"] { color: #8a8174; }
+.uai-dm-statusline[data-kind="live"] { color: #8ec9b8; }
+
+.uai-dm-endgame-card {
+    position: relative;
+    padding: 14px 14px 12px;
+    margin-bottom: 16px;
+    background:
+        linear-gradient(135deg, rgba(92, 22, 22, 0.35), rgba(42, 28, 12, 0.55) 55%, rgba(20, 16, 12, 0.8));
+    border: 1px solid rgba(196, 92, 92, 0.45);
+    border-left: 3px solid #c45c5c;
+}
+
+.uai-dm-endgame-card.is-locked {
+    border-left-color: #e4c37a;
+}
+
+.uai-dm-endgame-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e3b6b0;
+    margin-bottom: 6px;
+}
+
+.uai-dm-endgame-card h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #f7efe0;
+}
+
+.uai-dm-endgame-card p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #d9d0c0;
+    white-space: pre-wrap;
+}
+
+.uai-dm-endgame-card footer {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+    color: #c9a86c;
+}
+
+.uai-dm-section {
+    margin-top: 14px;
+}
+
+.uai-dm-section h3 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c9a86c;
+}
+
+.uai-dm-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.uai-dm-node {
+    position: relative;
+    padding: 10px 12px 10px 14px;
+    background: rgba(255, 248, 230, 0.03);
+    border: 1px solid rgba(201, 168, 108, 0.18);
+    overflow: hidden;
+}
+
+.uai-dm-node.is-active {
+    border-color: rgba(110, 200, 192, 0.45);
+}
+
+.uai-dm-node.is-completed {
+    opacity: 0.72;
+}
+
+.uai-dm-node header {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: #a89878;
+    margin-bottom: 4px;
+}
+
+.uai-dm-node-id {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+}
+
+.uai-dm-node-title {
+    margin: 0 0 6px;
+    font-size: 15px;
+    color: #f3ead8;
+}
+
+.uai-dm-node p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #cfc6b6;
+}
+
+.uai-dm-clues {
+    margin: 8px 0 0;
+    padding-left: 16px;
+    font-size: 12px;
+    color: #b7aa90;
+}
+
+.uai-dm-from {
+    margin-top: 6px;
+    font-size: 11px;
+    color: #8ec9b8;
+}
+
+.uai-dm-thread {
+    position: absolute;
+    left: 18px;
+    top: 100%;
+    width: 1px;
+    height: 10px;
+    background: linear-gradient(#8a2a2a, rgba(201, 168, 108, 0.5));
+}
+
+/* Abandoned nodes: red strike-through, never restored. */
+.uai-dm-node.dm-rerouted {
+    border-color: rgba(196, 92, 92, 0.55);
+    background: rgba(80, 18, 18, 0.22);
+    color: #c4b2a8;
+}
+
+.uai-dm-node.dm-rerouted .uai-dm-node-title {
+    position: relative;
+    color: #d7c4bc;
+}
+
+.uai-dm-node.dm-rerouted .uai-dm-node-title::after {
+    content: "";
+    position: absolute;
+    left: -2%;
+    top: 55%;
+    width: 0;
+    height: 2px;
+    background: #c45c5c;
+    box-shadow: 0 0 6px rgba(196, 92, 92, 0.8);
+    animation: dm-strike 0.55s ease forwards;
+}
+
+.uai-dm-node.dm-rerouted p,
+.uai-dm-node.dm-rerouted .uai-dm-clues {
+    text-decoration: line-through;
+    text-decoration-color: rgba(196, 92, 92, 0.75);
+    opacity: 0.75;
+}
+
+@keyframes dm-strike {
+    to { width: 104%; }
+}
+
+/* Replacement nodes fade in on a new path. */
+.uai-dm-node.dm-new {
+    border-color: rgba(110, 200, 192, 0.55);
+    background: linear-gradient(90deg, rgba(110, 200, 192, 0.16), rgba(201, 168, 108, 0.08) 55%, rgba(255, 248, 230, 0.03));
+    animation: dm-reveal 0.85s ease both;
+}
+
+@keyframes dm-reveal {
+    from {
+        opacity: 0;
+        filter: blur(4px);
+        clip-path: inset(0 40% 0 0);
+    }
+    to {
+        opacity: 1;
+        filter: none;
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+.uai-dm-entities {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.uai-dm-entity-label {
+    font-size: 11px;
+    color: #a89878;
+    margin-bottom: 4px;
+}
+
+.uai-dm-chip {
+    display: inline-block;
+    margin: 0 6px 6px 0;
+    padding: 2px 8px;
+    border: 1px solid rgba(201, 168, 108, 0.28);
+    font-size: 12px;
+    color: #e7dfd0;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.uai-dm-world {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #d5cbb8;
+    min-height: 3em;
+}
+
+.uai-dm-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 160px;
+    overflow: auto;
+    font-size: 12px;
+}
+
+.uai-dm-log li {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #cfc6b6;
+}
+
+.uai-dm-log time {
+    color: #8a8174;
+}
+
+.uai-dm-muted {
+    color: #8a8174;
+    font-size: 13px;
+}
+
+.uai-dm-settings .uai-dm-settings-lead {
+    opacity: 0.85;
+    line-height: 1.45;
+}
+
+#uai_dm_custom_api[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 600px) {
+    .uai-dm-panel {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        bottom: 90px;
+    }
+
+    #uai-dm-fab.uai-dm-fab {
+        right: 25px;
+        bottom: 25px;
+    }
+}
